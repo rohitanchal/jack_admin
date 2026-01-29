@@ -19,6 +19,7 @@ import {
   ModalHeaderComponent,
   ModalTitleDirective,
 } from '@coreui/angular';
+import { FormsModule } from '@angular/forms';
 import { UserService } from "../../services/user.service";
 
 @Component({
@@ -43,6 +44,7 @@ import { UserService } from "../../services/user.service";
     ModalFooterComponent,
     ModalHeaderComponent,
     ModalTitleDirective,
+    FormsModule,
   ],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss',
@@ -52,9 +54,12 @@ export class UsersComponent {
 
   loading = false;
   users: any[] = [];
+  allUsers: any[] = [];
 
   selectedUser: any = null;
   userLoading = false;
+  searchText = '';
+  searchTimer: any;
 
   totalUsers = 0;
   currentPage = 1;
@@ -107,15 +112,15 @@ export class UsersComponent {
     this.loading = true;
     this.currentPage = page;
 
-    this.userService.getAllUsersService(this.currentPage, this.limit).subscribe({
+    this.userService.getAllUsersService(this.currentPage, this.limit, this.searchText).subscribe({
       next: (res) => {
         this.users = res.data || [];
+
         this.totalUsers = res.pagination?.totalCount || 0;
         this.totalPages = res.pagination?.totalPages || 0;
+
         this.loading = false;
         this.cdr.detectChanges();
-
-        console.log('Fetched users:', this.users);
       },
       error: (err) => {
         console.error('Error fetching users:', err);
@@ -130,6 +135,16 @@ export class UsersComponent {
     this.getAllUsers(page);
   }
 
+  // Search (Globle)
+  onSearchChange(): void {
+    clearTimeout(this.searchTimer);
+
+    this.searchTimer = setTimeout(() => {
+      this.currentPage = 1;
+      this.getAllUsers(1);
+    }, 400);
+  }
+
   // Open User Modal
   openUserModal(userId: string): void {
     this.visibleUser = true;
@@ -140,7 +155,7 @@ export class UsersComponent {
   getUserById(userId: string): void {
     if (!userId) return;
 
-    this.visibleUser = true;  
+    this.visibleUser = true;
     this.userLoading = true;
     this.selectedUser = null;
 
@@ -149,8 +164,6 @@ export class UsersComponent {
         this.selectedUser = res.data;
         this.userLoading = false;
         this.cdr.detectChanges();
-
-        console.log('Fetched user by ID:', this.selectedUser);
       },
       error: (err) => {
         console.error('Error fetching user:', err);
