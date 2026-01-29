@@ -11,12 +11,13 @@ export class UserService {
 
   constructor(private http: HttpClient) { };
 
-  // get all users
-  getAllUsersService(page: number = 1, limit: number = 10): Observable<any> {
+  // get all users (with search)
+  getAllUsersService(page: number = 1, limit: number = 10, search: string = ''): Observable<any> {
     return this.http.get(`${apiUrls.userApis}get-all-users`, {
       params: {
         page: page.toString(),
-        limit: limit.toString()
+        limit: limit.toString(),
+        search: search.trim()
       }
     });
   };
@@ -38,6 +39,6 @@ export class UserService {
 
 
 
-  
+
 
 }

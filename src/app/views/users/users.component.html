@@ -11,7 +11,7 @@
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
 
                     <!-- Search User -->
-                    <input type="text" class="form-control w-auto" placeholder="Search User..." style="min-width: 200px;" />
+                    <input type="text" [(ngModel)]="searchText" (input)="onSearchChange()" class="form-control w-auto" placeholder="Search User..." style="min-width: 200px;" />
                 </div>
 
             </c-card-header>
