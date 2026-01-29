@@ -1,0 +1,62 @@
+/* =========================================================
+   Default Layout – Stable Footer + Full Height Layout
+   Works with CoreUI + Angular (17+)
+   ========================================================= */
+
+:host {
+  display: block;
+  height: 100%;
+}
+
+/* =========================
+   NG Scrollbar (Existing)
+   ========================= */
+:host::ng-deep {
+  .ng-scrollbar {
+    --scrollbar-padding: 1px;
+    --scrollbar-size: 5px;
+    --scrollbar-thumb-color: var(--cui-gray-500, #aab3c5);
+    --scrollbar-thumb-hover-color: var(--cui-gray-400, #cfd4de);
+    --scrollbar-hover-size: calc(var(--scrollbar-size) * 1.5);
+    --scrollbar-border-radius: 5px;
+  }
+
+  .ng-scroll-content {
+    display: flex;
+    min-height: 100%;
+  }
+}
+
+/* =========================
+   Layout Structure Fix
+   ========================= */
+
+.wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 🔑 KEY FIX – Content must grow */
+.body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Router outlet container must stretch */
+.body > c-container {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* =========================
+   Footer Styling (Optional)
+   ========================= */
+
+app-default-footer {
+  padding: 12px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: var(--cui-body-bg);
+}

@@ -1,0 +1,310 @@
+<c-row>
+    <c-col xs>
+        <c-card>
+
+            <!-- Header Section -->
+            <c-card-header
+                class="d-flex justify-content-between align-items-center">
+                <div>Manage Users</div>
+
+                <!-- Add User Button -->
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+
+                    <!-- Search User -->
+                    <input type="text" class="form-control w-auto" placeholder="Search User..." style="min-width: 200px;" />
+                </div>
+
+            </c-card-header>
+
+            <!-- View user details Modal -->
+            <c-modal id="liveDemoModal" [visible]="visibleUser" (visibleChange)="handleUserChange($event)">
+
+                <!-- Header -->
+                <c-modal-header>
+                    <h5 cModalTitle>User Details</h5>
+                    <button (click)="toggleUser()" cButtonClose></button>
+                </c-modal-header>
+
+                <!-- Body -->
+                <c-modal-body>
+
+                    <!-- Loader -->
+                    @if (userLoading) {
+                        <div class="text-center py-5">
+                            <c-spinner color="info"></c-spinner>
+                            <div class="text-secondary mt-3 fw-semibold">Loading user details...</div>
+                        </div>
+                    }
+
+                    <!-- User Data -->
+                    @else {
+                        @if (selectedUser) {
+
+                            <!-- Avatar + Name -->
+                            <div class="text-center mb-4">
+                                <img [src]="selectedUser.profilePic || 'assets/images/avatars/1.jpg'" class="rounded-circle border shadow-sm mb-2" width="100" height="100" />
+                                <h5 class="mb-0 fw-semibold">{{ selectedUser.name }}</h5>
+                                <small class="text-muted">{{ selectedUser.email }}</small>
+                            </div>
+
+                            <!-- Details Card -->
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body p-3">
+
+                                <table class="table table-sm align-middle mb-0">
+                                    <tbody>
+                                        <tr>
+                                            <th class="text-muted">Phone</th>
+                                            <td>{{ selectedUser.countryCode }} {{ selectedUser.phone || 'N/A' }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th class="text-muted">Gender</th>
+                                            <td>{{ selectedUser.gender || 'N/A' }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th class="text-muted">Account Status</th>
+                                            <td>
+                                                <span class="badge px-3 py-1" [ngClass]="{'bg-success': !selectedUser.isDeleted, 'bg-danger': selectedUser.isDeleted}">
+                                                    {{ selectedUser.isDeleted ? 'Deleted' : 'Active' }}
+                                                </span>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th class="text-muted">Email Verified</th>
+                                            <td>
+                                                <span class="badge" [ngClass]="{ 'bg-success': selectedUser.isEmailVerified, 'bg-warning text-dark': !selectedUser.isEmailVerified }">
+                                                    {{ selectedUser.isEmailVerified ? 'Yes' : 'No' }}
+                                                </span>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th class="text-muted">Registered</th>
+                                            <td>
+                                                <span class="badge" [ngClass]="{ 'bg-primary': selectedUser.isRegistered, 'bg-secondary': !selectedUser.isRegistered }">
+                                                    {{ selectedUser.isRegistered ? 'Registered' : 'Guest' }}
+                                                </span>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th class="text-muted">Created At</th>
+                                            <td>{{ selectedUser.createdAt | date:'medium' }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th class="text-muted">Last Updated</th>
+                                            <td>{{ selectedUser.updatedAt | date:'medium' }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                </div>
+                            </div>
+                        }
+                    }
+                </c-modal-body>
+
+                <!-- Footer -->
+                <c-modal-footer>
+                    <button (click)="toggleUser()" cButton color="secondary">Close</button>
+                </c-modal-footer>
+            </c-modal>            
+
+            <!-- Delete Modal -->
+            <c-modal #verticallyCenteredModal alignment="center" [visible]="visibleDelete" (visibleChange)="handleDeleteChange($event)">
+
+                <!-- Header -->
+                <c-modal-header>
+                    <h5 cModalTitle class="w-100 text-center mb-0">Delete User</h5>
+                    <button (click)="toggleDelete()" cButtonClose></button>
+                </c-modal-header>
+                
+                <!-- Body  -->
+                <c-modal-body class="text-center">
+                    <p class="mb-2">
+                        Are you sure you want to delete
+                        <strong class="text-danger">
+                        {{ selectedUser?.name || 'this user' }}
+                        </strong>?
+                    </p>
+
+                    <small class="text-secondary">
+                        This action will deactivate the user and they will no longer be able to access the system.
+                    </small>
+                </c-modal-body>
+
+                <!-- Footer -->
+                <c-modal-footer>
+                    <button (click)="toggleDelete()" cButton color="secondary">No</button>
+                    <button cButton color="danger" (click)="confirmDelete()" [disabled]="actionLoading[selectedUser?._id]" >Yes</button>
+                </c-modal-footer>
+            </c-modal>
+
+            <!-- Recover Deleted User Modal -->
+            <c-modal #verticallyCenteredModal alignment="center" [visible]="visibleRestore" (visibleChange)="handleRestoreChange($event)">
+
+                <!-- Header -->
+                <c-modal-header class="position-relative">
+                    <h5 cModalTitle class="w-100 text-center mb-0">Restore User</h5>
+                    <button (click)="toggleRestore()" cButtonClose></button>
+                </c-modal-header>
+                
+                <!-- Body  -->
+                <c-modal-body class="text-center">
+                    <p class="mb-2">Do you want to restore
+                        <strong class="text-success">
+                            {{ selectedUser?.name || 'this user' }}
+                        </strong>?
+                    </p>
+
+                    <small class="text-secondary">
+                        This user will regain access to the system.
+                    </small>
+                </c-modal-body>
+
+                <!-- Footer -->
+                <c-modal-footer>
+                    <button (click)="toggleRestore()" cButton color="secondary">Cancel</button>
+                    <button cButton color="success" (click)="confirmRestore()" [disabled]="actionLoading[selectedUser?._id]">Restore</button>
+                </c-modal-footer>
+            </c-modal>
+
+            <!-- Body Section -->
+            <c-card-body>
+                <table [hover]="true" [responsive]="true" [striped]="true" align="middle" cTable class="mb-0 border">
+
+                    <!-- Header -->
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Avatar</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Gender</th>
+                            <th scope="col">Phone</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+
+                    <!-- Body -->
+                    <tbody>                        
+                        
+                        @if (loading) {
+                            <!-- Loader -->
+                            <tr>
+                                <td colspan="12" class="text-center py-5">
+                                    <c-spinner color="info"></c-spinner>
+                                    <div class="mt-2 text-secondary">Loading users...</div>
+                                </td>
+                            </tr>
+                        } @else {
+                            @if (users.length ===0) {
+                                <!-- No Data -->
+                                <tr>
+                                    <td colspan="12" class="text-center py-5 text-secondary">
+                                        <i class="cil-user-unfollow fs-3 mb-2 d-block"></i>No users found
+                                    </td>
+                                </tr>
+                                
+                            } @else {
+
+                                <!-- Users data -->
+                                @for (user of users; track user._id; let i = $index) {
+                                    <tr>
+                                        <th scope="row">{{ (currentPage - 1) * limit + i + 1 }}</th>
+                                        <td>
+                                            <img [src]="user.profilePic ? user.profilePic : 'assets/images/avatars/1.jpg'" alt="Avatar" class="avatar border border-secondary rounded-circle" />
+                                        </td>
+                                        <td>{{ user.name || 'N/A' }}</td>
+                                        <td>{{ user.email }}</td>
+                                        <td>{{ user.gender || 'N/A' }}</td>
+                                        <td>{{ user.phone || 'N/A' }}</td>
+
+                                        <!-- Status -->
+                                        <td>
+                                            <span class="badge" [ngClass]="{'bg-success': !user.isDeleted, 'bg-secondary': user.isDeleted}">
+                                                {{ user.isDeleted ? 'Deleted' : 'Active' }}
+                                            </span>
+                                        </td>
+
+                                        <!-- Action Buttons -->
+                                        <td>
+
+                                            <!-- View User Button -->
+                                            <button cButton color="info" (click)="openUserModal(user._id)" [disabled]="userLoading" class="me-2" title="View User">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+
+                                            <!-- Delete User Button -->
+                                            @if (!user.isDeleted) {
+
+                                                <!-- Delete -->
+                                                <button cButton color="danger" (click)="openDeleteModal(user)" [disabled]="actionLoading[user._id]" title="Delete User">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                                }
+
+                                                <!-- Restore -->
+                                                @if (user.isDeleted) {
+                                                <button cButton color="success" (click)="openRestoreModal(user)" [disabled]="actionLoading[user._id]" title="Restore User">
+                                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                                </button>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        }
+                    </tbody>
+
+                    <!-- Footer -->
+                    <tfoot>
+                        <tr>
+                            <td class="px-3" colspan="10">
+                                <div
+                                    class="d-flex justify-content-between align-items-center">
+
+                                    <!-- Pagination -->
+                                    <div class="mt-3">
+
+                                        <c-pagination aria-label="Page navigation">
+
+                                            <!-- Previous Button -->
+                                            <li cPageItem [disabled]="currentPage === 1">
+                                                <a cPageLink (click)="changePage(currentPage - 1)">Previous</a>
+                                            </li>
+
+                                            <!-- Current Page -->
+                                            <li cPageItem *ngFor="let page of [].constructor(totalPages); let i = index" [active]="currentPage === i + 1">
+                                                <a cPageLink (click)="changePage(i + 1)">{{ i + 1 }}</a>
+                                            </li>
+
+                                            <!-- Next Button -->
+                                            <li cPageItem [disabled]="currentPage === totalPages">
+                                                <a cPageLink (click)="changePage(currentPage + 1)">Next</a>
+                                            </li>
+
+                                        </c-pagination>
+                                    </div>
+
+                                    <!-- Total Users -->
+                                    <div class="text-end fw-semibold text-secondary px-3 py-2 bg-body border rounded shadow-sm">
+                                        Total Users: <span>{{ totalUsers }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                    </tfoot>
+
+                </table>
+            </c-card-body>
+
+        </c-card>
+    </c-col>
+</c-row>

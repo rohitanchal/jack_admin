@@ -1,0 +1,50 @@
+<div class="bg-light dark:bg-transparent min-vh-100 d-flex flex-row align-items-center">
+
+  <c-container breakpoint="md">
+
+    <c-row class="justify-content-center">
+
+      <c-col lg="10" xl="5">
+
+        <c-card-group>
+
+          <c-card class="p-4">
+
+            <c-card-body>
+
+              <!-- Login Form -->
+              <form [formGroup]="loginForm" (ngSubmit)="submitLoginForm()">
+                <h1 class="text-center">Login</h1>
+                <p class="text-body-secondary text-center mb-5">Sign In to your account</p>
+
+                <!-- Email Input -->
+                <c-input-group class="mb-3">
+                  <span cInputGroupText><svg cIcon name="cilUser"></svg></span>
+                  <input type="email" cFormControl formControlName="email" placeholder="Email" />
+                </c-input-group>
+
+                <!-- Password Input -->
+                <c-input-group class="mb-4">
+                  <span cInputGroupText><svg cIcon name="cilLockLocked"></svg></span>
+                  <input type="password" cFormControl formControlName="password" placeholder="Password" />
+                </c-input-group>
+
+                <c-row class="mb-3">
+
+                  <c-col xs="12">
+
+                    <!-- Submit Button -->
+                    <button type="submit" [disabled]="loginForm.invalid" cButton color="primary" class="w-100">Login</button>
+
+                  </c-col>
+
+                </c-row>
+              </form>
+
+            </c-card-body>
+          </c-card>
+        </c-card-group>
+      </c-col>
+    </c-row>
+  </c-container>
+</div>
