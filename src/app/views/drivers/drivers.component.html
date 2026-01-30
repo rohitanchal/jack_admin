@@ -1,1 +1,534 @@
-<p>drivers works!</p>
+<c-row>
+    <c-col xs>
+        <c-card>
+
+             <!-- Header Section -->
+            <c-card-header class="d-flex justify-content-between align-items-center">
+                <div>Manage Driver</div>
+
+                <!-- Add Driver Button -->
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+
+                    <!-- Search Driver -->
+                    <input type="text" class="form-control w-auto" placeholder="Search Driver..." style="min-width: 200px;" />
+
+                    <!-- Add driver Button -->
+                    <button cButton (click)="toggleDriver()">Add Driver</button>
+
+                </div>
+
+            </c-card-header>
+
+            <!-- Add Driver Modal -->
+            <c-modal size="lg" id="liveDemoModal" [visible]="visibleAddDriver" (visibleChange)="handleDriverChange($event)">
+
+                <!-- Header -->
+                <c-modal-header>
+                    <h5 cModalTitle>Add Driver</h5>
+                    <button (click)="toggleDriver()" cButtonClose></button>
+                </c-modal-header>
+
+                <!-- Body -->
+                <c-modal-body>
+                    
+                    <!-- Form -->
+                    <form id="driverFormId" [formGroup]="driverForm" (ngSubmit)="submitDriver()">
+
+                        <div class="row">
+
+                            <div class="col-md-6">
+
+                                <!-- Name -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Driver Name</label>
+                                    <input type="text" class="form-control" formControlName="name" placeholder="Enter driver name" />
+                                    
+                                    <!-- Warning -->
+                                    <div class="text-danger small" *ngIf="f['name']?.touched && f['name']?.invalid">
+                                        Name is required (min 3 characters)
+                                    </div>
+                                </div>
+
+                                <!-- Email -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Email</label>
+                                    <input type="email" class="form-control" formControlName="email" placeholder="Enter email" />
+
+                                    <!-- Warning -->
+                                    <div class="text-danger small" *ngIf="f['email']?.touched && f['email']?.invalid">
+                                        Valid email required
+                                    </div>
+                                </div>
+
+                                <!-- Password -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Password</label>
+                                    <input type="password" class="form-control" formControlName="password" placeholder="Enter password" />
+                                    
+                                    <!-- Warning -->
+                                    <div class="text-danger small" *ngIf="f['password']?.touched && f['password']?.invalid">
+                                        Password must be 6+ chars, include uppercase, lowercase, number & special char
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <!-- Phone -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Phone</label>
+                                    <input type="text" class="form-control" formControlName="phone" placeholder="10 digit phone" />
+                                    
+                                    <!-- Warning -->
+                                    <div class="text-danger small" *ngIf="f['phone']?.touched && f['phone']?.invalid">
+                                        Enter valid 10 digit phone
+                                    </div>
+                                </div>
+
+                                <!-- Address -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Address</label>
+                                    <textarea rows="2" class="form-control" formControlName="address" placeholder="Enter address"></textarea>
+                                    
+                                    <!-- Warning -->
+                                    <div class="text-danger small" *ngIf="f['address']?.touched && f['address']?.invalid">
+                                        Address must be at least 5 characters
+                                    </div>
+                                </div>
+
+                                <!-- Date of Birth -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Date of Birth</label>
+                                    <input type="date" class="form-control" formControlName="dateOfBirth" />
+                                    
+                                    <!-- Warning -->
+                                    <div class="text-danger small" *ngIf="f['dateOfBirth']?.touched && f['dateOfBirth']?.invalid">
+                                        Date of birth is required
+                                    </div>
+                                </div>  
+
+                            </div> 
+
+                        </div>
+
+                    </form>
+                </c-modal-body>
+                
+                <!-- Footer -->
+                <c-modal-footer>
+                    <button (click)="toggleDriver()" [disabled]="loading" cButton color="secondary">Close</button>
+                    <button  cButton color="primary" type="submit" form="driverFormId" [disabled]="loading || driverForm.invalid">
+                        <c-spinner size="sm" *ngIf="loading"></c-spinner>
+                        <span *ngIf="!loading">Save</span>
+                    </button>
+                </c-modal-footer>
+
+            </c-modal>
+
+            <!-- View Modal -->
+            <c-modal size="lg" id="liveDemoModal" [visible]="visibleView" (visibleChange)="handleViewChange($event)">
+
+                <!-- Header -->
+                <c-modal-header>
+                    <h5 cModalTitle>View Driver details</h5>
+                    <button (click)="toggleView()" cButtonClose></button>
+                </c-modal-header>
+
+                <!-- Body -->
+                <c-modal-body>
+                   
+                    <!-- Loader -->
+                    @if (viewLoading) {
+                        <div class="text-center py-5">
+                            <c-spinner color="info"></c-spinner>
+                            <div class="text-secondary mt-3 fw-semibold">
+                                Loading driver details...
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Driver Data -->
+                    @else {
+                        @if (selectedDriver) {
+
+                            <!-- Avatar + Name -->
+                            <div class="text-center mb-4">
+                                <img [src]="selectedDriver.profilePic || 'assets/images/avatars/1.jpg'" class="rounded-circle border shadow-sm mb-2" width="110" height="110" />
+                                <h5 class="mb-0 fw-semibold">{{ selectedDriver.name || 'N/A' }}</h5>
+                                <small class="text-muted">{{ selectedDriver.email || 'N/A' }}</small>
+
+                                <!-- DELETED BADGE -->
+                                @if (selectedDriver.isDeleted) {
+                                    <div class="mt-2">
+                                        <span class="badge bg-danger text-white">
+                                            Deleted Driver
+                                        </span>
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- BASIC DETAILS -->
+                            <div class="card border-0 shadow-sm mb-3">
+                                <div class="card-body p-3">
+
+                                    <table class="table table-sm mb-0">
+
+                                        <tbody>
+                                            <tr>
+                                                <th class="text-muted">Phone</th>
+                                                <td>{{ selectedDriver.phone || 'N/A' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th class="text-muted">Address</th>
+                                                <td>{{ selectedDriver.address || 'N/A' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th class="text-muted">Date of Birth</th>
+                                                <td>{{ selectedDriver.dateOfBirth ? (selectedDriver.dateOfBirth | date:'mediumDate') : 'N/A' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th class="text-muted">Verification Status</th>
+                                                <td>
+                                                    <span class="badge" [ngClass]="{ 'bg-success': selectedDriver.isVerified === true || selectedDriver.isVerified === 'true', 'bg-warning text-dark': selectedDriver.isVerified === false || selectedDriver.isVerified === 'false' }">
+                                                        {{ selectedDriver.isVerified === true || selectedDriver.isVerified === 'true' ? 'Verified' : 'Pending' }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <th class="text-muted">Registered</th>
+                                            <td>
+                                                <span class="badge bg-primary">
+                                                    {{ selectedDriver.isRegistered ? 'Yes' : 'No' }}
+                                                </span>
+                                            </td>
+                                            </tr>
+                                        </tbody>
+
+                                    </table>
+
+                                </div>
+                            </div>
+
+                            <!-- DRIVING LICENSE -->
+                            <div class="card border-0 shadow-sm mb-3">
+
+                                <div class="card-header fw-semibold">Driving License</div>
+
+                                <div class="card-body">
+
+                                    <div class="row align-items-start">
+
+                                        <!-- LEFT -->
+                                        <div class="col-md-6">
+                                            <p><strong>License No:</strong>{{ selectedDriver.documents?.drivingLicense?.licenseNumber || 'N/A' }}</p>
+                                            <p><strong>Expiry:</strong>
+                                                {{ selectedDriver.documents?.drivingLicense?.expiryDate ? (selectedDriver.documents.drivingLicense.expiryDate | date) : 'N/A'}}
+                                            </p>
+                                        </div>
+
+                                        <!-- RIGHT -->
+                                        <div class="col-md-6">
+                                            @if (
+                                                selectedDriver.documents?.drivingLicense?.documents?.front ||
+                                                selectedDriver.documents?.drivingLicense?.documents?.back
+                                            ) {
+                                                <div class="d-flex gap-3 flex-wrap justify-content-md-end">
+                                                    @if (selectedDriver.documents?.drivingLicense?.documents?.front) {
+                                                        <img [src]="selectedDriver.documents.drivingLicense.documents.front" class="img-thumbnail" width="150" />
+                                                    }
+
+                                                    @if (selectedDriver.documents?.drivingLicense?.documents?.back) {
+                                                        <img [src]="selectedDriver.documents.drivingLicense.documents.back" class="img-thumbnail" width="150" />
+                                                    }
+                                                </div>
+                                            } @else {
+                                                <div class="text-muted small text-md-end">No documents uploaded</div>
+                                            }
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                            </div>
+
+
+                            <!-- INSURANCE -->
+                            <div class="card border-0 shadow-sm mb-3">
+                                <div class="card-header fw-semibold">Insurance</div>
+
+                                <div class="card-body">
+                                    <div class="row align-items-start">
+
+                                        <!-- LEFT -->
+                                        <div class="col-md-6">
+                                            <p><strong>Provider:</strong>{{ selectedDriver.documents?.insurance?.providerName || 'N/A' }}</p>
+                                            <p><strong>Policy No:</strong>{{ selectedDriver.documents?.insurance?.policyNumber || 'N/A' }}</p>
+                                            <p><strong>Expiry:</strong>
+                                                {{
+                                                    selectedDriver.documents?.insurance?.expiryDate
+                                                    ? (selectedDriver.documents.insurance.expiryDate | date)
+                                                    : 'N/A'
+                                                }}
+                                            </p>
+                                        </div>
+
+                                        <!-- RIGHT -->
+                                        <div class="col-md-6">
+                                            @if (selectedDriver.documents?.insurance?.documents?.length) {
+                                                <div class="d-flex gap-3 flex-wrap justify-content-md-end">
+                                                    @for (doc of selectedDriver.documents.insurance.documents; track doc._id) {
+                                                        <img [src]="doc.docFile" class="img-thumbnail" width="150" />
+                                                    }
+                                                </div>
+                                                } @else {
+                                                    <div class="text-muted small text-md-end">No documents uploaded</div>
+                                                }
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                            </div>
+
+
+                            <!-- TIMESTAMPS -->
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header fw-semibold">System Info</div>
+                                <div class="card-body p-3">
+
+                                    <table class="table table-sm mb-0">
+                                        <tbody>
+                                            <tr>
+                                                <th class="text-muted">Created At</th>
+                                                <td>{{ selectedDriver.createdAt ? (selectedDriver.createdAt | date:'medium') : 'N/A' }}</td>
+                                            </tr>
+
+                                            <tr>
+                                                <th class="text-muted">Last Updated</th>
+                                                <td>{{ selectedDriver.updatedAt ? (selectedDriver.updatedAt | date:'medium') : 'N/A' }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+
+                                </div>
+                            </div>
+                        }
+                    }
+
+                </c-modal-body>
+
+                <!-- Footer -->
+                <c-modal-footer>
+                    <button (click)="toggleView()" cButton color="secondary">Close</button>
+                </c-modal-footer>
+
+            </c-modal>
+
+            <!-- Delete Modal -->
+            <c-modal #verticallyCenteredModal alignment="center" [visible]="visibleDelete" (visibleChange)="handleDeleteChange($event)">
+
+                <!-- Header -->
+                <c-modal-header>
+                    <h5 cModalTitle class="w-100 text-center mb-0">Delete Driver</h5>
+                    <button (click)="toggleDelete()" cButtonClose></button>
+                </c-modal-header>
+                
+                <!-- Body  -->
+                <c-modal-body class="text-center">
+                    <p class="mb-2">
+                        Are you sure you want to delete
+                        <strong class="text-danger">
+                            {{ selectedDriver?.name || 'this driver' }}
+                        </strong>?
+                    </p>
+
+                    <small class="text-secondary">
+                        This action will deactivate the driver and they will no longer be able to access the system.
+                    </small>
+                </c-modal-body>
+
+                <!-- Footer -->
+                <c-modal-footer>
+                    <button (click)="toggleDelete()" cButton color="secondary">No</button>
+                    <button cButton color="danger" (click)="confirmDelete()" [disabled]="actionLoading[selectedDriver?._id]">Yes</button>
+                </c-modal-footer>
+            </c-modal>
+
+            <!-- Recover Deleted Driver Modal -->
+            <c-modal #verticallyCenteredModal alignment="center" [visible]="visibleRestore" (visibleChange)="handleRestoreChange($event)">
+
+                <!-- Header -->
+                <c-modal-header class="position-relative">
+                    <h5 cModalTitle class="w-100 text-center mb-0">Restore Driver</h5>
+                    <button (click)="toggleRestore()" cButtonClose></button>
+                </c-modal-header>
+                
+                <!-- Body  -->
+                <c-modal-body class="text-center">
+                    <p class="mb-2">
+                        Do you want to restore
+                        <strong class="text-success">
+                            {{ selectedDriver?.name || 'this driver' }}
+                        </strong>?
+                    </p>
+
+                    <small class="text-secondary">
+                        This user will regain access to the system.
+                    </small>
+                </c-modal-body>
+
+                <!-- Footer -->
+                <c-modal-footer>
+                    <button (click)="toggleRestore()" cButton color="secondary">Cancel</button>
+                    <button cButton color="success" (click)="confirmRestore()" [disabled]="actionLoading[selectedDriver?._id]">Restore</button>
+                </c-modal-footer>
+            </c-modal>
+
+            <!-- Body Section -->
+            <c-card-body>
+                <table [hover]="true" [responsive]="true" [striped]="true" align="middle" cTable class="mb-0 border">
+
+                    <!-- Header -->
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Avatar</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Phone</th>
+                            <th scope="col">Verified</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+
+                    <!-- Body -->
+                    <tbody>
+                        
+                        @if (loading) {
+
+                            <!-- Loader -->
+                            <tr>
+                                <td colspan="12" class="text-center py-5">
+                                    <c-spinner color="info"></c-spinner>
+                                    <div class="mt-2 text-secondary">Loading drivers...</div>
+                                </td>
+                            </tr>
+                        } @else {
+                            @if (driver.length === 0) {
+
+                                <!-- No Data -->
+                                <tr>
+                                    <td colspan="12" class="text-center py-5 text-secondary">
+                                        <i class="cil-user-unfollow fs-3 mb-2 d-block"></i>No drivers found
+                                    </td>
+                                </tr>
+                            } @else {
+
+                                <!-- Drivers Data -->
+                                @for (driver of driver; track driver._id; let i = $index) {
+                                    <tr>
+                                        <th scope="row">{{ (currentPage - 1) * limit + i + 1 }}</th>
+                                        <td>
+                                            <img [src]="driver.profilePic ? driver.profilePic : 'assets/images/avatars/1.jpg'" alt="Avatar" class="avatar border border-secondary rounded-circle" />
+                                        </td>
+                                        <td>{{ driver.name || 'N/A' }}</td>
+                                        <td>{{ driver.email || 'N/A' }}</td>
+                                        <td>{{ driver.phone || 'N/A' }}</td>
+
+                                        <!-- Is Verified -->
+                                        <td>
+                                            <span class="badge" [ngClass]="{ 'bg-success': driver.isVerified === true || driver.isVerified === 'true', 'bg-warning text-dark': driver.isVerified === false || driver.isVerified === 'false' }">
+                                                {{ driver.isVerified === true || driver.isVerified === 'true' ? 'Verified' : 'Pending' }}
+                                            </span>
+                                        </td>
+
+                                        <!-- Status -->
+                                        <td>
+                                            <span class="badge" [ngClass]="{'bg-success': !driver.isDeleted, 'bg-secondary': driver.isDeleted}">
+                                                {{ driver.isDeleted ? 'Deleted' : 'Active' }}
+                                            </span>
+                                        </td>
+                                        
+                                        <!-- Action Buttons -->
+                                        <td>
+
+                                            <!-- View Button -->
+                                            <button (click)="getDriver(driver._id)" cButton color="info" class="me-2" title="View Driver">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+
+                                            <!-- Delete/Restore User Button -->
+                                            @if (!driver.isDeleted) {
+
+                                                <!-- Delete -->
+                                                <button cButton color="danger" (click)="openDeleteModal(driver)" [disabled]="actionLoading[driver._id]" title="Delete Driver">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                                }
+
+                                                <!-- Restore -->
+                                                @if (driver.isDeleted) {
+                                                <button cButton color="success" (click)="openRestoreModal(driver)" [disabled]="actionLoading[driver._id]" title="Restore Driver">
+                                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                                </button>
+                                            }
+
+                                        </td>
+
+
+                                    </tr>
+                                }
+                            }
+                        }
+                    </tbody>
+
+                    <!-- Footer -->
+                    <tfoot>
+                        <tr>
+                            <td class="px-3" colspan="10">
+                                <div
+                                    class="d-flex justify-content-between align-items-center">
+
+                                    <!-- Pagination -->
+                                    <div class="mt-3">
+
+                                        <c-pagination aria-label="Page navigation">
+
+                                            <!-- Previous Button -->
+                                            <li cPageItem [disabled]="currentPage === 1">
+                                                <a cPageLink (click)="changePage(currentPage - 1)">Previous</a>
+                                            </li>
+
+                                            <!-- Current Page -->
+                                            <li cPageItem *ngFor="let page of [].constructor(totalPages); let i = index" [active]="currentPage === i + 1">
+                                                <a cPageLink (click)="changePage(i + 1)">{{ i + 1 }}</a>
+                                            </li>
+
+                                            <!-- Next Button -->
+                                            <li cPageItem [disabled]="currentPage === totalPages">
+                                                <a cPageLink (click)="changePage(currentPage + 1)">Next</a>
+                                            </li>
+
+                                        </c-pagination>
+                                    </div>
+
+                                    <!-- Total Drivers -->
+                                    <div class="text-end fw-semibold text-secondary px-3 py-2 bg-body border rounded shadow-sm">
+                                        Total Drivers: <span>{{ totalDrivers }}</span>
+                                    </div>
+
+                                </div>
+                            </td>
+                        </tr>
+
+                    </tfoot>
+
+                </table>
+            </c-card-body>
+
+
+        </c-card>
+    </c-col>
+</c-row>
