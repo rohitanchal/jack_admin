@@ -8,8 +8,8 @@ import { Observable } from 'rxjs';
 })
 
 export class DriverService {
-  
-  constructor(private http: HttpClient ) {};
+
+  constructor(private http: HttpClient) { };
 
   // Create Driver
   createDriverService(payload: any): Observable<any> {
@@ -19,7 +19,7 @@ export class DriverService {
   // Get all Driver
   getAllDriversService(page: number = 1, limit: number = 10, search: string = ''): Observable<any> {
     return this.http.get(`${apiUrls.driverApis}get-all-drivers`, {
-       params: {
+      params: {
         page: page.toString(),
         limit: limit.toString(),
         search: search.trim()
@@ -28,19 +28,27 @@ export class DriverService {
   };
 
   // Get Driver by id
-  getDriverService(id: string): Observable <any> {
-    return this.http.get(`${apiUrls.driverApis}get-driver/${id}`)
+  getDriverService(id: string): Observable<any> {
+    return this.http.get(`${apiUrls.driverApis}get-driver/${id}`);
   };
 
   // Update Driver by id
+  updateDriverService(driverId: string, formData: FormData): Observable <any> {
+    return this.http.put(`${apiUrls.driverApis}update-driver/${driverId}`, formData);
+  };
+
+  // Verify Driver
+  verifyDriver(driverId: string): Observable<any> {
+    return this.http.put(`${apiUrls.driverApis}verify-driver/${driverId}`, {});
+  };
 
   // Delete Driver by id
   deleteDriverSerive(driverId: string): Observable<any> {
-    return this.http.delete(`${apiUrls.driverApis}delete-driver/${driverId}`)
+    return this.http.delete(`${apiUrls.driverApis}delete-driver/${driverId}`);
   };
 
   // Restore deleted Driver by id
-  restoreDriverService(driverId: string): Observable <any> {
+  restoreDriverService(driverId: string): Observable<any> {
     return this.http.put(`${apiUrls.driverApis}restore-driver/${driverId}`, {});
   };
 

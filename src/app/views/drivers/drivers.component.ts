@@ -20,6 +20,7 @@ import {
 } from '@coreui/angular';
 import { DriverService } from "../../services/driver.service";
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
+type FileType = 'profilePic' | 'licenseFront' | 'licenseBack' | 'insuranceDocs';
 
 @Component({
   selector: 'app-drivers',
@@ -49,6 +50,7 @@ import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } fr
   styleUrl: './drivers.component.scss',
 })
 
+
 export class DriversComponent implements OnInit {
 
   loading = false;
@@ -59,7 +61,12 @@ export class DriversComponent implements OnInit {
   searchText = '';
   searchTimer: any;
   selectedDriver: any = null;
-
+  selectedFiles: {
+    profilePic?: File;
+    licenseFront?: File;
+    licenseBack?: File;
+    insuranceDocs?: File[];
+  } = {};
 
   totalDrivers = 0;
   currentPage = 1;
@@ -69,11 +76,11 @@ export class DriversComponent implements OnInit {
   actionLoading: { [key: string]: boolean } = {};
 
   public visibleAddDriver = false;
+  public visibleEdit = false;
   public visibleView = false;
+  public visibleVerify = false;
   public visibleDelete = false;
   public visibleRestore = false;
-
-
 
   constructor(
     private fb: FormBuilder,
@@ -99,6 +106,28 @@ export class DriversComponent implements OnInit {
     this.visibleAddDriver = event;
   };
 
+  toggleEdit(): void {
+    this.visibleEdit = !this.visibleEdit;
+    if (!this.visibleEdit) this.resetEditState();
+  }
+
+  handleEditChange(event: boolean): void {
+    this.visibleEdit = event;
+    if (!event) this.resetEditState();
+  }
+
+  resetEditState(): void {
+    this.selectedDriver = null;
+    this.driverForm.reset();
+
+    this.selectedFiles = {
+      profilePic: undefined,
+      licenseFront: undefined,
+      licenseBack: undefined,
+      insuranceDocs: []
+    };
+  }
+
   toggleView() {
     this.visibleView = !this.visibleView;
   };
@@ -106,6 +135,16 @@ export class DriversComponent implements OnInit {
   handleViewChange(event: any) {
     this.visibleView = event;
   };
+
+  toggleVerify(): void {
+    this.visibleVerify = false;
+    this.selectedDriver = null;
+  }
+
+  handleVerifyChange(event: boolean): void {
+    this.visibleVerify = event;
+    if (!event) this.selectedDriver = null;
+  }
 
   toggleDelete() {
     this.visibleDelete = !this.visibleDelete;
@@ -140,10 +179,17 @@ export class DriversComponent implements OnInit {
       ]],
       address: ['', [Validators.required, Validators.minLength(5)]],
       dateOfBirth: ['', Validators.required],
+
+      licenseNumber: [''],
+      licenseExpiry: [''],
+
+      providerName: [''],
+      policyNumber: [''],
+      insuranceExpiry: [''],
     });
   };
 
-  //  // Getter for easy access in template
+  // Getter for easy access in template
   get f() {
     return this.driverForm.controls;
   }
@@ -170,6 +216,32 @@ export class DriversComponent implements OnInit {
     });
   };
 
+  openVerifyModal(driver: any): void {
+    this.selectedDriver = driver;
+    this.visibleVerify = true;
+  }
+
+  // Verify Driver Account
+  confirmVerify(): void {
+    if (!this.selectedDriver?._id) return;
+
+    this.driverService.verifyDriver(this.selectedDriver._id).subscribe({
+      next: (res) => {
+        this.driver = this.driver.map(d =>
+          d._id === this.selectedDriver._id
+            ? { ...d, isVerified: true }
+            : d
+        );
+
+        this.visibleVerify = false;
+        this.selectedDriver = null;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Verify failed', err);
+      }
+    });
+  }
 
   // Get all Drivers
   getAllDrivers(page: number = 1): void {
@@ -185,9 +257,6 @@ export class DriversComponent implements OnInit {
 
         this.loading = false;
         this.cdr.detectChanges();
-
-
-        console.log("Drivers:", this.driver);
       },
       error: (err) => {
         console.error('Error fetching drivers', err);
@@ -214,7 +283,6 @@ export class DriversComponent implements OnInit {
         this.selectedDriver = res?.data || null;
         this.viewLoading = false;
         this.cdr.detectChanges();
-        console.log("driver details", this.selectedDriver);
       },
       error: () => {
         this.viewLoading = false;
@@ -242,14 +310,12 @@ export class DriversComponent implements OnInit {
 
     this.driverService.deleteDriverSerive(driverId).subscribe({
       next: () => {
-        // Update UI
         this.driver = this.driver.map(d =>
           d._id === driverId ? { ...d, isDeleted: true } : d
         );
 
         this.actionLoading[driverId] = false;
 
-        // 🔥 CLOSE MODAL PROPERLY
         this.visibleDelete = false;
         this.selectedDriver = null;
 
@@ -261,7 +327,6 @@ export class DriversComponent implements OnInit {
       }
     });
   }
-
 
   // Open Restore Modal
   openRestoreModal(driver: any): void {
@@ -284,7 +349,6 @@ export class DriversComponent implements OnInit {
 
         this.actionLoading[driverId] = false;
 
-        // 🔥 CLOSE MODAL PROPERLY
         this.visibleRestore = false;
         this.selectedDriver = null;
 
@@ -294,13 +358,172 @@ export class DriversComponent implements OnInit {
         this.actionLoading[driverId] = false;
       }
     });
+  };
+
+  // Edit Modal Open
+  openEditModal(driverId: string): void {
+    this.visibleEdit = true;
+    this.loading = true;
+
+    this.driverService.getDriverService(driverId).subscribe({
+      next: (res) => {
+        const driver = res.data;
+        this.selectedDriver = driver;
+
+        this.driverForm.patchValue({
+          name: driver.name ?? '',
+          email: driver.email ?? '',
+          phone: driver.phone ?? '',
+          address: driver.address ?? '',
+          dateOfBirth: this.formatDateForInput(driver.dateOfBirth),
+
+          licenseNumber: driver.documents?.drivingLicense?.licenseNumber ?? '',
+          licenseExpiry: this.formatDateForInput(
+            driver.documents?.drivingLicense?.expiryDate
+          ),
+
+          providerName: driver.documents?.insurance?.providerName ?? '',
+          policyNumber: driver.documents?.insurance?.policyNumber ?? '',
+          insuranceExpiry: this.formatDateForInput(
+            driver.documents?.insurance?.expiryDate
+          ),
+        });
+
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.loading = false;
+      }
+    });
   }
 
+  // Files Select
+  onFileSelect(event: Event, type: FileType): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
 
+    if (type === 'insuranceDocs') {
+      this.selectedFiles.insuranceDocs = Array.from(input.files);
+    } else {
+      this.selectedFiles[type] = input.files[0];
+    }
+  }
 
+  // Date Formatter
+  formatDateForInput(dateValue: any): string {
+    if (!dateValue) return '';
 
+    if (typeof dateValue === 'object' && dateValue.$date) {
+      return new Date(dateValue.$date).toISOString().split('T')[0];
+    }
 
+    if (typeof dateValue === 'string') {
+      return new Date(dateValue).toISOString().split('T')[0];
+    }
 
+    return '';
+  };
+
+  // Update Driver
+  updateDriver(): void {
+    if (!this.selectedDriver) return;
+
+    const formData = new FormData();
+    let hasChanges = false;
+    const controls = this.driverForm.controls;
+
+    const appendIfDirty = (key: string, value: any) => {
+      if (controls[key]?.dirty && value !== null && value !== '') {
+        formData.append(key, value);
+        hasChanges = true;
+      }
+    };
+
+    appendIfDirty('name', this.driverForm.value.name);
+    appendIfDirty('email', this.driverForm.value.email);
+    appendIfDirty('phone', this.driverForm.value.phone);
+    appendIfDirty('address', this.driverForm.value.address);
+    appendIfDirty('dateOfBirth', this.driverForm.value.dateOfBirth);
+
+    if (controls['password']?.dirty && this.driverForm.value.password) {
+      formData.append('password', this.driverForm.value.password);
+      hasChanges = true;
+    }
+
+    const documents: any = {};
+
+    if (controls['licenseNumber']?.dirty || controls['licenseExpiry']?.dirty) {
+      documents.drivingLicense = {
+        licenseNumber: this.driverForm.value.licenseNumber,
+        expiryDate: this.driverForm.value.licenseExpiry,
+      };
+      hasChanges = true;
+    }
+
+    if (
+      controls['providerName']?.dirty ||
+      controls['policyNumber']?.dirty ||
+      controls['insuranceExpiry']?.dirty
+    ) {
+      documents.insurance = {
+        providerName: this.driverForm.value.providerName,
+        policyNumber: this.driverForm.value.policyNumber,
+        expiryDate: this.driverForm.value.insuranceExpiry,
+      };
+      hasChanges = true;
+    }
+
+    if (Object.keys(documents).length) {
+      formData.append('documents', JSON.stringify(documents));
+    }
+
+    const FILE_ORDER: FileType[] = [
+      'profilePic',
+      'licenseFront',
+      'licenseBack'
+    ];
+
+    FILE_ORDER.forEach(type => {
+      if (this.selectedFiles[type]) {
+        formData.append('files', this.selectedFiles[type] as File);
+        hasChanges = true;
+      } else {
+        formData.append(
+          'files',
+          new File([''], 'skip.png', { type: 'image/png' })
+        );
+      }
+    });
+
+    if (this.selectedFiles.insuranceDocs?.length) {
+      this.selectedFiles.insuranceDocs.forEach(file => {
+        formData.append('files', file);
+        hasChanges = true;
+      });
+    }
+
+    if (!hasChanges) {
+      alert('No changes detected');
+      return;
+    }
+
+    this.loading = true;
+
+    this.driverService.updateDriverService(this.selectedDriver._id, formData)
+      .subscribe({
+        next: () => {
+          this.loading = false;
+          this.visibleEdit = false;
+          this.resetEditState();
+          this.getAllDrivers();
+        },
+        error: err => {
+          this.loading = false;
+          console.error('Update failed', err);
+        }
+      });
+  };
 
 
 }
