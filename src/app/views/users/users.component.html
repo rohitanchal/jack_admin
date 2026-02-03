@@ -1,4 +1,4 @@
-<c-row>
+ <c-row>
     <c-col xs>
         <c-card>
 
@@ -240,7 +240,7 @@
                                                 <i class="bi bi-eye"></i>
                                             </button>
 
-                                            <!-- Delete User Button -->
+                                            <!-- Delete/Restore User Button -->
                                             @if (!user.isDeleted) {
 
                                                 <!-- Delete -->
@@ -296,6 +296,7 @@
                                     <div class="text-end fw-semibold text-secondary px-3 py-2 bg-body border rounded shadow-sm">
                                         Total Users: <span>{{ totalUsers }}</span>
                                     </div>
+                                    
                                 </div>
                             </td>
                         </tr>
