@@ -19,7 +19,9 @@ import {
   PaginationComponent,
 } from '@coreui/angular';
 import { DriverService } from "../../services/driver.service";
-import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 type FileType = 'profilePic' | 'licenseFront' | 'licenseBack' | 'insuranceDocs';
 
 @Component({
@@ -27,6 +29,7 @@ type FileType = 'profilePic' | 'licenseFront' | 'licenseBack' | 'insuranceDocs';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     ColComponent,
     RowComponent,
@@ -68,6 +71,8 @@ export class DriversComponent implements OnInit {
     insuranceDocs?: File[];
   } = {};
 
+  searchSubject = new Subject<string>();
+
   totalDrivers = 0;
   currentPage = 1;
   totalPages = 0;
@@ -92,6 +97,18 @@ export class DriversComponent implements OnInit {
   ngOnInit(): void {
     this.initializeForm();
     this.getAllDrivers();
+
+    // Search Driver
+    this.searchSubject
+      .pipe(
+        debounceTime(400),
+        distinctUntilChanged()
+      )
+      .subscribe((value) => {
+        this.searchText = value;
+        this.currentPage = 1;
+        this.getAllDrivers(1);
+      });
   };
 
   // Modal toggles
@@ -162,6 +179,10 @@ export class DriversComponent implements OnInit {
     this.visibleRestore = event;
   };
 
+  // Searching Driver 
+  onSearchChange(value: string): void {
+    this.searchSubject.next(value);
+  };
 
   // Form
   initializeForm(): void {

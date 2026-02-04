@@ -2,7 +2,7 @@
     <c-col xs>
         <c-card>
 
-             <!-- Header Section -->
+            <!-- Header Section -->
             <c-card-header class="d-flex justify-content-between align-items-center">
                 <div>Manage Driver</div>
 
@@ -10,7 +10,7 @@
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
 
                     <!-- Search Driver -->
-                    <input type="text" class="form-control w-auto" placeholder="Search Driver..." style="min-width: 200px;" />
+                    <input type="text" [(ngModel)]="searchText" (ngModelChange)="onSearchChange($event)" class="form-control w-auto" placeholder="Search Driver..." style="min-width: 200px;" />
 
                     <!-- Add driver Button -->
                     <button cButton (click)="toggleDriver()">Add Driver</button>

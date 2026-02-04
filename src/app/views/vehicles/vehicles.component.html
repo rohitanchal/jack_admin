@@ -1,1 +1,293 @@
-<p>vehicles works!</p>
+<c-row>
+    <c-col xs>
+        <c-card>
+
+            <!-- Header Section -->
+            <c-card-header class="d-flex justify-content-between align-items-center">
+                <div>Manage Vehicles</div>
+
+                <!-- Add Vehicle Button -->
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+
+                    <!-- Search Vehicle -->
+                    <input type="text" [(ngModel)]="search" (ngModelChange)="onSearchChange($event)" class="form-control w-auto" placeholder="Search Vehicle..." style="min-width: 200px;" />
+
+                    <!-- Add Vehicle Button -->
+                    <button cButton (click)="toggleAdd()">Add Vehicle</button>
+
+                </div>
+
+            </c-card-header>
+
+
+            <!-- Add vehicle Modal -->
+            <c-modal size="lg" id="liveDemoModal" [visible]="visibleAdd" (visibleChange)="handleAddChange($event)">
+
+                <!-- Header -->
+                <c-modal-header>
+                    <h5 cModalTitle>Add Vehicle</h5>
+                    <button (click)="toggleAdd()" cButtonClose></button>
+                </c-modal-header>
+
+                <!-- Body -->
+                <c-modal-body>Woohoo, you are reading this text in a modal!</c-modal-body>
+
+                <!-- Footer -->
+                <c-modal-footer>
+                    <button (click)="toggleAdd()" cButton color="secondary">Close</button>
+                    <button cButton color="primary">Save</button>
+                </c-modal-footer>
+
+            </c-modal>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            <!-- Delete vehicle Modal -->
+            <c-modal #verticallyCenteredModal alignment="center" [visible]="visibleDelete" (visibleChange)="handleDeleteChange($event)">
+
+                <!-- Header -->
+                <c-modal-header>
+                    <h5 cModalTitle class="w-100 text-center mb-0">Delete Vehicle</h5>
+                    <button (click)="toggleDelete()" cButtonClose></button>
+                </c-modal-header>
+                
+                <!-- Body  -->
+                <c-modal-body class="text-center">
+                    <p class="mb-2">
+                        Are you sure you want to delete
+                        <strong class="text-danger">
+                            {{ selectedVehicle?.vehicleName || 'this vehicle' }}
+                        </strong>?
+                    </p>
+
+                    <small class="text-secondary">
+                        This action will deactivate the vehicle and it will no longer be available.
+                    </small>
+                </c-modal-body>
+
+                <!-- Footer -->
+                <c-modal-footer>
+                    <button (click)="toggleDelete()" cButton color="secondary">Close</button>
+                    <button cButton color="danger" (click)="confirmDelete()" [disabled]="actionLoading[selectedVehicle?._id]">Yes</button>
+                </c-modal-footer>
+            </c-modal>
+
+            <!-- Recover deleted vehicle Modal -->
+            <c-modal #verticallyCenteredModal alignment="center" [visible]="visibleRestore" (visibleChange)="handleRestoreChange($event)">
+
+                <!-- Header -->
+                <c-modal-header class="position-relative">
+                    <h5 cModalTitle class="w-100 text-center mb-0">Restore Vehicle</h5>
+                    <button (click)="toggleRestore()" cButtonClose></button>
+                </c-modal-header>
+                
+                <!-- Body  -->
+                <c-modal-body class="text-center">
+                    <p class="mb-2">
+                        Do you want to restore
+                        <strong class="text-success">
+                            {{ selectedVehicle?.vehicleName || selectedVehicle?.registrationNumber || 'this vehicle' }}
+                        </strong>?
+                    </p>
+
+                    <small class="text-secondary">
+                        This vehicle will regain access to the system.
+                    </small>
+                </c-modal-body>
+
+                <!-- Footer -->
+                <c-modal-footer>
+                    <button (click)="toggleRestore()" cButton color="secondary">Cancel</button>
+                    <button cButton color="success" (click)="confirmRestore()" [disabled]="actionLoading[selectedVehicle?._id]">Restore</button>
+                </c-modal-footer>
+            </c-modal>
+
+            <!-- Body Section -->
+            <c-card-body>
+
+                <!-- Table -->
+                <table [hover]="true" [responsive]="true" [striped]="true" align="middle" cTable class="mb-0 border">
+
+                    <!-- Header -->
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Avatar</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Reg. No.</th>
+                            <th scope="col">Model</th>
+                            <th scope="col">Verified</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Assigned</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+
+                    <!-- Body -->
+                    <tbody>
+                        @if (loading) {
+
+                            <!-- Loader -->
+                            <tr>
+                                <td colspan="12" class="text-center py-5">
+                                    <c-spinner color="info"></c-spinner>
+                                    <div class="mt-2 text-secondary">Loading vehicles...</div>
+                                </td>
+                            </tr>
+                        } @else {
+                            @if (vehicles.length === 0) {
+
+                                <!-- No Data -->
+                                <tr>
+                                    <td colspan="12" class="text-center py-5 text-secondary">
+                                        <i class="cil-user-unfollow fs-3 mb-2 d-block"></i>No vehicles found
+                                    </td>
+                                </tr>
+                            } @else {
+
+                                <!-- Vehicles Data -->
+                                @for (vehicle of vehicles; track vehicle._id; let i = $index) {
+                                    <tr>
+                                        <th scope="row">{{ (currentPage - 1) * limit + i + 1 }}</th>
+                                        <td>
+                                            <img [src]="vehicle.images?.length ? vehicle.images[0] : 'assets/images/avatars/9.jpg'" alt="Avatar" class="avatar border border-secondary rounded-circle" />
+                                        </td>
+                                        <td class="fw-semibold">{{ vehicle.vehicleName || 'N/A'  }}</td>
+                                        <td>{{ vehicle.registrationNumber || 'N/A' }}</td>
+                                        <td>{{ vehicle.modelNumber || 'N/A' }}<span class="text-muted">({{ vehicle.modelYear || '—' }})</span></td>
+
+                                        <!-- Is Verified -->
+                                        <td>
+                                            <span class="badge" [ngClass]="{'bg-success': vehicle.isVerified === true || vehicle.isVerified === 'true', 'bg-warning text-dark': vehicle.isVerified === false || vehicle.isVerified === 'false'}">
+                                                {{ (vehicle.isVerified === true || vehicle.isVerified === 'true') ? 'Verified' : 'Pending' }}
+                                            </span>
+                                        </td>
+
+                                        <!-- Status -->
+                                        <td>
+                                            <span class="badge" [ngClass]="{'bg-success': vehicle.currentStatus === 'AVAILABLE', 'bg-warning text-dark': vehicle.currentStatus === 'BOOKED'}">
+                                                {{ vehicle.currentStatus || 'N/A' }}
+                                            </span>
+                                        </td>
+
+                                        <!-- Assigned Driver -->
+                                        <td>
+                                            <span class="badge" [ngClass]="vehicle.isAssigned ? 'bg-info' : 'bg-secondary'">
+                                                {{ vehicle.isAssigned ? 'Assigned' : 'Unassigned' }}
+                                            </span>
+                                        </td>
+
+                                        <!-- Action Buttons -->
+                                        <td>
+
+                                            <!-- View Button -->
+                                            <button class="mx-2" cButton color="info" title="View Vehicle">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+
+                                            <!-- Edit Button -->
+                                            <button cButton color="primary" class="me-2" title="Edit Vehicle details">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </button>
+
+                                            <!-- Delete/Restore User Button -->
+                                            @if (!vehicle.isDeleted) {
+
+                                                <!-- Delete -->
+                                                <button (click)="openDeleteModal(vehicle)" [disabled]="actionLoading[vehicle._id]" cButton color="danger" title="Delete Vehicle">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            }
+                                                
+                                            <!-- Restore -->
+                                            @if (vehicle.isDeleted) {
+                                                <button (click)="openRestoreModal(vehicle)" [disabled]="actionLoading[vehicle._id]" cButton color="success" title="Restore Vehicle">
+                                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                                </button>
+                                            }
+                                            
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        }
+                    </tbody>
+
+                    <!-- Footer -->
+                    <tfoot>
+                        <tr>                            
+                            <td class="px-3" colspan="10">
+                                <div
+                                    class="d-flex justify-content-between align-items-center">
+
+                                    <!-- Pagination -->
+                                    <div class="mt-3">
+
+                                        <c-pagination aria-label="Page navigation">
+
+                                            <!-- Previous Button -->
+                                            <li cPageItem [disabled]="currentPage === 1">
+                                                <a cPageLink (click)="changePage(currentPage - 1)">Previous</a>
+                                            </li>
+
+                                            <!-- Current Page -->
+                                            <li cPageItem *ngFor="let page of [].constructor(totalPages); let i = index" [active]="currentPage === i + 1">
+                                                <a cPageLink (click)="changePage(i + 1)">{{ i + 1 }}</a>
+                                            </li>
+
+                                            <!-- Next Button -->
+                                            <li cPageItem [disabled]="currentPage === totalPages">
+                                                <a cPageLink (click)="changePage(currentPage + 1)">Next</a>
+                                            </li>
+
+                                        </c-pagination>
+                                    </div>
+
+                                    <!-- Total Vehciles -->
+                                    <div class="text-end fw-semibold text-secondary px-3 py-2 bg-body border rounded shadow-sm">
+                                        Total Vehicles: <span>{{ totalCount }}</span>
+                                    </div>
+
+                                </div>
+                            </td>
+                        </tr>
+                    </tfoot>                    
+                    
+                </table>
+                
+            </c-card-body>
+            
+            
+        </c-card>
+    </c-col>
+</c-row>
